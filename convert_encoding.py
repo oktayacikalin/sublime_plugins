@@ -15,7 +15,7 @@ import sublime_plugin
 
 
 # See http://docs.python.org/library/codecs.html for more info.
-COMMAND = 'iso-8859-1 to utf8'
+DEFAULT_COMMAND = 'iso-8859-1 to utf8'
 
 
 class ConvertEncodingCommand(sublime_plugin.TextCommand):
@@ -67,4 +67,5 @@ class ConvertEncodingCommand(sublime_plugin.TextCommand):
             return
         
         window = self.view.window()
-        window.show_input_panel('Convert', COMMAND, self._replace, None, None)
+        window.show_input_panel('Convert', DEFAULT_COMMAND,
+                                self._replace, None, None)
