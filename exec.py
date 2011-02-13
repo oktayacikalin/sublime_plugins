@@ -18,28 +18,33 @@ to something like this to make it work:
 import sublime
 
 
-class AsyncProcess(AsyncProcess):
-    '''
-    Wrapper of the built-in AsyncProcess class.
-    '''
-
-    def __init__(self, arg_list, *args, **kwargs):
+try:
+    _exec_is_wrapped
+except NameError:
+    _exec_is_wrapped = True
+    
+    class AsyncProcess(AsyncProcess):
         '''
-        Initializes the object and modifies the arg_list.
-
-        @type  arg_list: list
-        @param arg_list: Command line splitted up as a list of strings.
-        @type      args: list
-        @param     args: Additional positional args.
-        @type    kwargs: dict
-        @param   kwargs: Additional named args.
-
-        @return: None
+        Wrapper of the built-in AsyncProcess class.
         '''
-        settings = sublime.load_settings("Global.sublime-settings")
-        arg_list_wrapper = settings.get("exec_arg_list_wrapper", [])
-        if arg_list_wrapper:
-            from pipes import quote
-            arg_list = map(quote, arg_list)
-            arg_list = arg_list_wrapper + [' '.join(arg_list)]
-        super(AsyncProcess, self).__init__(arg_list, *args, **kwargs)
+
+        def __init__(self, arg_list, *args, **kwargs):
+            '''
+            Initializes the object and modifies the arg_list.
+
+            @type  arg_list: list
+            @param arg_list: Command line splitted up as a list of strings.
+            @type      args: list
+            @param     args: Additional positional args.
+            @type    kwargs: dict
+            @param   kwargs: Additional named args.
+
+            @return: None
+            '''
+            settings = sublime.load_settings("Global.sublime-settings")
+            arg_list_wrapper = settings.get("exec_arg_list_wrapper", [])
+            if arg_list_wrapper:
+                from pipes import quote
+                arg_list = map(quote, arg_list)
+                arg_list = arg_list_wrapper + [' '.join(arg_list)]
+            super(AsyncProcess, self).__init__(arg_list, *args, **kwargs)
