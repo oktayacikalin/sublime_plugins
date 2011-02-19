@@ -19,6 +19,7 @@ Configurable file settings:
 @since: 2011-02-14
 '''
 
+import sublime
 import sublime_plugin
 
 
@@ -43,6 +44,9 @@ class ScrollOffsetListener(sublime_plugin.EventListener):
 
         @return: None
         '''
+        if getattr(self, 'paused', False):
+            return
+        
         get = view.settings().get
         offset_top = get('scroll_offset_top', DEFAULT_OFFSET_TOP)
         offset_top_treshold = get('scroll_offset_top_treshold',
@@ -79,10 +83,24 @@ class ScrollOffsetListener(sublime_plugin.EventListener):
             amount_is_enough = amount >= offset_top_treshold
             if view_begin - amount > file_begin and amount_is_enough:
                 # print 'move up:', amount
-                view.run_command('scroll_lines', {'amount': amount})
+                if amount > 1 and selected_region.size() > 0:
+                    self.paused = True
+                    def _move_up():
+                        view.run_command('scroll_lines', {'amount': 1})
+                        self.paused = False
+                    sublime.set_timeout(_move_up, 100)
+                else:
+                    view.run_command('scroll_lines', {'amount': amount})
         if diff_bottom < offset_bottom:
             amount = offset_bottom - diff_bottom
             amount_is_enough = amount >= offset_bottom_treshold
             if view_end + amount < file_end and amount_is_enough:
                 # print 'move down:', amount
-                view.run_command('scroll_lines', {'amount': -amount})
+                if amount > 1 and selected_region.size() > 0:
+                    self.paused = True
+                    def _move_down():
+                        view.run_command('scroll_lines', {'amount': -1})
+                        self.paused = False
+                    sublime.set_timeout(_move_down, 100)
+                else:
+                    view.run_command('scroll_lines', {'amount': -amount})
