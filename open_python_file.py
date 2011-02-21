@@ -58,9 +58,12 @@ class Highlighter(object):
         else:
             regions = []
             for symbol in self.symbols:
+                if type(symbol) is tuple:
+                    symbol = symbol[0]
                 # print 'highlight:', symbol
                 results = self.view.find_all('(def|class) %s(.*):' % symbol)
                 results += self.view.find_all('%s\s*=.*' % symbol)
+                results += self.view.find_all('import .*%s' % symbol)
                 if results:
                     regions += results
             if regions:
