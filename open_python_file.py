@@ -17,6 +17,7 @@ Configurable file settings:
 '''
 
 import os
+import re
 import subprocess
 
 import sublime
@@ -127,6 +128,13 @@ class OpenPythonFileCommand(sublime_plugin.TextCommand):
         @return: A view if the file could be openend, otherwise None.
         '''
         stdout, stderr = self.get_import_file(module_ref, source_filename)
+        if stderr:
+            regex = re.compile(r'\s*File "(?P<file>.+)", line \d+, in .*')
+            matches = regex.findall(stderr)
+            for match in matches:
+                if os.path.isfile(match):
+                    stdout, stderr = match, ''
+                    break
         if stderr:
             print 'stdout =', stdout
             print 'stderr =', stderr
