@@ -189,6 +189,8 @@ class OpenPythonFileCommand(sublime_plugin.TextCommand):
         self.window = self.view.window()
         source_filename = self.view.file_name()
         for module_ref, symbols in self.find_imports():
+            if type(module_ref) is tuple:
+                module_ref = module_ref[0]
             view = self.load_module(module_ref, source_filename)
             if symbols is not None:
                 highlighter = Highlighter(view, symbols)
