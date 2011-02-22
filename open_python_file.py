@@ -112,11 +112,16 @@ class OpenPythonFileCommand(sublime_plugin.TextCommand):
         sys.path.insert(0, os.getcwd())
         import pkgutil
         try:
-            print \'%s\' + pkgutil.find_loader(\'%s\').filename + \'%s\'
+            filename = \'%s\'
+            module = pkgutil.find_loader(filename)
         except ImportError, excp:
-            sys.stderr.write(str(excp))
+            module = None
+        if module is not None:
+            print \'%s\' + module.get_filename() + \'%s\'
+        else:
+            sys.stderr.write('Module not found: ' + filename)
         ''' % (os.path.dirname(source_filename),
-               self.begin_tag, module_ref, self.end_tag)
+               module_ref, self.begin_tag, self.end_tag)
         vrun_input = textwrap.dedent(vrun_input)
         cmd = [python_bin]
         if arg_list_wrapper:
@@ -149,7 +154,7 @@ class OpenPythonFileCommand(sublime_plugin.TextCommand):
             print 'stdout =', stdout
             print 'stderr =', stderr
             sublime.error_message(stderr)
-            return
+            return None
         
         module_filename = stdout.strip()
         if module_filename.startswith(self.begin_tag):
@@ -199,6 +204,6 @@ class OpenPythonFileCommand(sublime_plugin.TextCommand):
             if type(module_ref) is tuple:
                 module_ref = module_ref[0]
             view = self.load_module(module_ref, source_filename)
-            if symbols is not None:
+            if view is not None and symbols is not None:
                 highlighter = Highlighter(view, symbols)
                 highlighter.run()
