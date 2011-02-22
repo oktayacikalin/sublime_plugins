@@ -111,10 +111,10 @@ class OpenPythonFileCommand(sublime_plugin.TextCommand):
         import sys
         sys.path.insert(0, os.getcwd())
         import pkgutil
+        filename = \'%s\'
         try:
-            filename = \'%s\'
             module = pkgutil.find_loader(filename)
-        except ImportError, excp:
+        except ImportError:
             module = None
         if module is not None:
             print \'%s\' + module.get_filename() + \'%s\'
