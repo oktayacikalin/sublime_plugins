@@ -8,6 +8,8 @@ For use add something like this to your user definable key bindings file:
 Configurable file settings:
 * open_python_file_vrun_executable: Optional wrapper for e.g. virtualenv. E.g.:
   "open_python_file_vrun_executable": ["/users/oktay/code/bin/vrun.sh"]
+* open_python_file_python_executable: Path to Python executable. E.g.:
+  "open_python_file_python_executable": "python"
 
 @author: Oktay Acikalin <ok@ryotic.de>
 
@@ -17,7 +19,7 @@ Configurable file settings:
 '''
 
 import os
-import re
+import textwrap
 import subprocess
 
 import sublime
@@ -100,22 +102,34 @@ class OpenPythonFileCommand(sublime_plugin.TextCommand):
         '''
         settings = sublime.load_settings('Global.sublime-settings')
         arg_list_wrapper = settings.get('open_python_file_vrun_executable')
+        python_bin = settings.get('open_python_file_python_executable',
+                                  'python')
         # Use vrun.sh to find matching Python file.
-        vrun_cmd = 'cd "%s" && python -c "import os.path ; ' \
-                   'import %s as module ; ' \
-                   'print \'%s\' + os.path.abspath(module.__file__) ' \
-                   '+ \'%s\'"' % (os.path.dirname(source_filename), module_ref,
-                                  self.begin_tag, self.end_tag)
-        cmd = [vrun_cmd]
+        vrun_input = '''
+        import os
+        os.chdir(\'%s\')
+        import sys
+        sys.path.insert(0, os.getcwd())
+        import pkgutil
+        try:
+            print \'%s\' + pkgutil.find_loader(\'%s\').filename + \'%s\'
+        except ImportError, excp:
+            sys.stderr.write(str(excp))
+        ''' % (os.path.dirname(source_filename),
+               self.begin_tag, module_ref, self.end_tag)
+        vrun_input = textwrap.dedent(vrun_input)
+        cmd = [python_bin]
         if arg_list_wrapper:
             cmd = arg_list_wrapper + [' '.join(cmd)]
             cmd += ['--origin', source_filename, '--quiet']
         # print 'cmd =', cmd
+        # print 'input =', vrun_input
         stdout, stderr = subprocess.Popen(cmd,
+                                          stdin=subprocess.PIPE,
                                           stdout=subprocess.PIPE,
                                           stderr=subprocess.PIPE,
                                           shell=not arg_list_wrapper,
-                                          ).communicate()
+                                          ).communicate(input=vrun_input)
         return stdout, stderr.strip()
 
     def load_module(self, module_ref, source_filename):
@@ -131,13 +145,6 @@ class OpenPythonFileCommand(sublime_plugin.TextCommand):
         @return: A view if the file could be openend, otherwise None.
         '''
         stdout, stderr = self.get_import_file(module_ref, source_filename)
-        if stderr:
-            regex = re.compile(r'\s*File "(?P<file>.+)", line \d+, in .*')
-            matches = regex.findall(stderr)
-            for match in matches:
-                if os.path.isfile(match):
-                    stdout, stderr = match, ''
-                    break
         if stderr:
             print 'stdout =', stdout
             print 'stderr =', stderr
