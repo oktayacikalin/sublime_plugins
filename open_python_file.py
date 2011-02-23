@@ -25,7 +25,7 @@ import subprocess
 import sublime
 import sublime_plugin
 
-import find_python_imports
+import support.find_python_imports
 
 
 class Highlighter(object):
@@ -184,7 +184,7 @@ class OpenPythonFileCommand(sublime_plugin.TextCommand):
             if selection.empty():
                 selection = self.view.line(selection)
             content = self.view.substr(selection)
-            imports = find_python_imports.parse(content)
+            imports = support.find_python_imports.parse(content)
             for ref_type, ref_module, ref_symbols in imports:
                 module_refs.append((ref_module, ref_symbols))
         return module_refs
