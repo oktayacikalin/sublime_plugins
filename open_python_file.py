@@ -3,7 +3,11 @@ A text command to scan selections for Python imports, open the referenced files
 and temporarily bookmark and highlight found symbols.
 
 For use add something like this to your user definable key bindings file:
-{ "keys": ["super+shift+o"], "command": "open_python_file" }
+{ "keys": ["super+shift+o"], "command": "open_python_file", "context":
+    [
+        { "key": "selector", "operator": "equal", "operand": "source.python" }
+    ]
+}
 
 Configurable file settings:
 * open_python_file_vrun_executable: Optional wrapper for e.g. virtualenv. E.g.:
