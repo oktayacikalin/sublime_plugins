@@ -4,6 +4,8 @@ block a cuple of times to support visual localization.
 
 For use add something like this to your user definable key bindings file:
 { "keys": ["super+k"], "command": "show_at_center_and_blink" },
+{ "keys": ["super+shift+k"], "command": "show_at_center_and_blink",
+  "args": {"do_center": false} },
 
 @author: Oktay Acikalin <ok@ryotic.de>
 
@@ -17,7 +19,7 @@ import sublime_plugin
 
 
 BLINK_FREQUENCY = 200
-BLINK_MAX_COUNT = 5
+BLINK_MAX_COUNT = 2
 
 
 active_repeater = 0
@@ -25,10 +27,11 @@ active_repeater = 0
 
 class ShowAtCenterAndBlinkCommand(sublime_plugin.TextCommand):
 
-    def run(self, edit):
+    def run(self, edit, do_center=True):
         global active_repeater
         
-        self.view.run_command('show_at_center')
+        if do_center:
+            self.view.run_command('show_at_center')
         sel = self.view.sel()[0]
         sel = self.view.line(sel)
         
@@ -43,7 +46,7 @@ class ShowAtCenterAndBlinkCommand(sublime_plugin.TextCommand):
                 return
             def stub():
                 repeater(id, count + 1)
-            if count > BLINK_MAX_COUNT:
+            if count > BLINK_MAX_COUNT * 2 - 1:
                 return
             elif count % 2 == 0:
                 add()
