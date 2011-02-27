@@ -36,10 +36,11 @@ class ShowAtCenterAndBlinkCommand(sublime_plugin.TextCommand):
         sel = self.view.line(sel)
         
         def add():
-            self.view.add_regions('blink', [sel], 'bookmark',
-                                  'bookmark', sublime.DRAW_OUTLINED)
+            self.view.add_regions('ShowAtCenterAndBlinkCommand', [sel],
+                                  'bookmark', 'bookmark',
+                                  sublime.DRAW_OUTLINED)
         def remove():
-            self.view.erase_regions('blink')
+            self.view.erase_regions('ShowAtCenterAndBlinkCommand')
         
         def repeater(id, count=0):
             if active_repeater != id:
