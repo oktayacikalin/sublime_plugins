@@ -2,7 +2,7 @@
 Event listener which scans content, finds special remark words like FIXME,
 TODO, WARNING, INFO or DONE and highlights them.
 
-Add these to you theme (and optionally adapt the colors to your liking):
+Add these to your theme (and optionally adapt the colors to your liking):
         <dict>
             <key>name</key>
             <string>Remark TODO</string>
