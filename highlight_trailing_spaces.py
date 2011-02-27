@@ -38,8 +38,12 @@ class HighlightTrailingSpacesListener(sublime_plugin.EventListener):
         '''
         settings = view.settings()
 
+        if bool(settings.get('is_widget')):
+            return
+
         max_size = settings.get('highlight_trailing_spaces_max_file_size',
                                 DEFAULT_MAX_FILE_SIZE)
+        # print max_size, type(max_size)
         if max_size not in (None, False):
             max_size = long(max_size)
             cur_size = view.size()
@@ -49,7 +53,7 @@ class HighlightTrailingSpacesListener(sublime_plugin.EventListener):
         
         color_name = settings.get('highlight_trailing_spaces_color_name',
                                   DEFAULT_COLOR_NAME)
-        trails = view.find_all('([ \t]+)$')
+        trails = view.find_all('[ \t]+$')
         regions = []
         for trail in trails:
             regions.append(trail)
@@ -59,17 +63,6 @@ class HighlightTrailingSpacesListener(sublime_plugin.EventListener):
     def on_load(self, view):
         '''
         Event callback to react on loading of the document.
-
-        @type  view: sublime.View
-        @param view: View to work with.
-
-        @return: None
-        '''
-        self.highlight(view)
-
-    def on_activated(self, view):
-        '''
-        Event callback to react on activation of the document.
 
         @type  view: sublime.View
         @param view: View to work with.
