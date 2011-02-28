@@ -90,7 +90,14 @@ class DiffViewsExecuteCommand(sublime_plugin.TextCommand):
         filename = '%s vs %s.patch' % (left.name, right.name)
         view.set_name(filename)
         edit = view.begin_edit()
-        view.insert(edit, 0, ''.join(diff))
+        buffer = ''
+        for line in diff:
+            buffer += line
+            if len(buffer) >= 1024:
+                view.insert(edit, view.size(), buffer)
+                buffer = ''
+        if len(buffer):
+            view.insert(edit, view.size(), buffer)
         view.end_edit(edit)
         # settings = view.settings()
         # settings.set('line_numbers', False)
