@@ -139,7 +139,7 @@ class HighlightCodeRemarksListener(sublime_plugin.EventListener):
         color_keys, color_values = zip(*REMARK_COLORS.items())
         # print color_keys
         # print color_values
-        pattern = r'(?:^[*]+\s*)?\<(%s)\>(?:[^\'\"\n\[\]]+?[:])?'
+        pattern = r'(?:^[ \t]*?[*]+[ \t]*)?\<(%s)\>(?:[^\'\"\n\[\]\!\?]+?[:])?'
         regex = pattern % '|'.join(color_keys)
         regex = '(?:' + regex + ')'
         # print 'regex =', regex
