@@ -15,21 +15,29 @@ You might want to override the following parameters within your file settings:
 '''
 
 import sublime
-import sublime_plugin
 
-from support.view import view_is_widget, view_is_too_big
+from support.view import DeferedViewListener
 
 
 DEFAULT_MAX_FILE_SIZE = 1048576
 DEFAULT_COLOR_NAME = 'comment'
 
 
-class HighlightTrailingSpacesListener(sublime_plugin.EventListener):
+class HighlightTrailingSpacesListener(DeferedViewListener):
     '''
     An event listener to highlight trailing spaces.
     '''
 
-    def highlight(self, view):
+    def __init__(self):
+        super(HighlightTrailingSpacesListener, self).__init__()
+        self.max_size_setting = 'highlight_trailing_spaces_max_file_size'
+        self.default_max_file_size = DEFAULT_MAX_FILE_SIZE
+        self.delay = 0
+
+    def view_is_too_big_callback(self, view):
+        view.erase_regions('HighlightTrailingSpacesListener')
+
+    def update(self, view):
         '''
         Searches for trailing spaces and highlights them.
 
@@ -40,14 +48,6 @@ class HighlightTrailingSpacesListener(sublime_plugin.EventListener):
         '''
         settings = view.settings()
 
-        if view_is_widget(view):
-            return
-
-        if view_is_too_big(view, 'highlight_trailing_spaces_max_file_size',
-                           DEFAULT_MAX_FILE_SIZE):
-            view.erase_regions('HighlightTrailingSpacesListener')
-            return
-        
         color_name = settings.get('highlight_trailing_spaces_color_name',
                                   DEFAULT_COLOR_NAME)
         trails = view.find_all('[ \t]+$')
@@ -56,25 +56,3 @@ class HighlightTrailingSpacesListener(sublime_plugin.EventListener):
             regions.append(trail)
         view.add_regions('HighlightTrailingSpacesListener', regions, color_name,
                          sublime.DRAW_EMPTY_AS_OVERWRITE)
-
-    def on_load(self, view):
-        '''
-        Event callback to react on loading of the document.
-
-        @type  view: sublime.View
-        @param view: View to work with.
-
-        @return: None
-        '''
-        self.highlight(view)
-
-    def on_modified(self, view):
-        '''
-        Event callback to react on modification of the document.
-
-        @type  view: sublime.View
-        @param view: View to work with.
-
-        @return: None
-        '''
-        self.highlight(view)

@@ -115,9 +115,8 @@ Add these to your theme (and optionally adapt the colors to your liking):
 '''
 
 import sublime
-import sublime_plugin
 
-from support.view import view_is_widget, view_is_too_big
+from support.view import DeferedViewListener
 
 
 DEFAULT_MAX_FILE_SIZE = 1048576
@@ -135,9 +134,10 @@ REMARK_COLORS = {
 }
 
 
-class HighlightCodeRemarksListener(sublime_plugin.EventListener):
+class HighlightCodeRemarksListener(DeferedViewListener):
 
     def __init__(self):
+        super(HighlightCodeRemarksListener, self).__init__()
         color_keys, color_values = zip(*REMARK_COLORS.items())
         # print color_keys
         # print color_values
@@ -148,6 +148,14 @@ class HighlightCodeRemarksListener(sublime_plugin.EventListener):
         self.regex = regex
         self.color_keys = color_keys
         self.color_values = color_values
+        self.max_size_setting = 'highlight_code_remarks_max_file_size'
+        self.default_max_file_size = DEFAULT_MAX_FILE_SIZE
+        self.delay = 500
+
+    def view_is_too_big_callback(self, view):
+        for color_value in self.color_values:
+            tag = 'HighlightCodeRemarksListener.%s' % color_value
+            view.erase_regions(tag)
 
     def update(self, view):
         remarks = []
@@ -180,27 +188,3 @@ class HighlightCodeRemarksListener(sublime_plugin.EventListener):
             else:
                 # print 'remove', tag
                 view.erase_regions(tag)
-
-    def defered_update(self, view):
-        if view_is_widget(view):
-            return
-        
-        if view_is_too_big(view, 'highlight_code_remarks_max_file_size',
-                           DEFAULT_MAX_FILE_SIZE):
-            for color_value in self.color_values:
-                tag = 'HighlightCodeRemarksListener.%s' % color_value
-                view.erase_regions(tag)
-            return
-        
-        def func():
-            self.update(view)
-        sublime.set_timeout(func, 500)
-
-    def on_modified(self, view):
-        self.defered_update(view)
-
-    def on_load(self, view):
-        self.defered_update(view)
-
-    # def on_activated(self, view):
-    #     self.defered_update(view)
