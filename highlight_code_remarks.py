@@ -117,6 +117,8 @@ Add these to your theme (and optionally adapt the colors to your liking):
 import sublime
 import sublime_plugin
 
+from support.view import view_is_widget, view_is_too_big
+
 
 DEFAULT_MAX_FILE_SIZE = 1048576
 
@@ -180,21 +182,15 @@ class HighlightCodeRemarksListener(sublime_plugin.EventListener):
                 view.erase_regions(tag)
 
     def defered_update(self, view):
-        settings = view.settings()
-        if bool(settings.get('is_widget')):
+        if view_is_widget(view):
             return
         
-        max_size = settings.get('highlight_code_remarks_max_file_size',
-                                DEFAULT_MAX_FILE_SIZE)
-        # print max_size, type(max_size)
-        if max_size not in (None, False):
-            max_size = long(max_size)
-            cur_size = view.size()
-            if cur_size > max_size:
-                for color_value in self.color_values:
-                    tag = 'HighlightCodeRemarksListener.%s' % color_value
-                    view.erase_regions(tag)
-                return
+        if view_is_too_big(view, 'highlight_code_remarks_max_file_size',
+                           DEFAULT_MAX_FILE_SIZE):
+            for color_value in self.color_values:
+                tag = 'HighlightCodeRemarksListener.%s' % color_value
+                view.erase_regions(tag)
+            return
         
         def func():
             self.update(view)

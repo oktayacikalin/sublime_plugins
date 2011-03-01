@@ -17,6 +17,8 @@ You might want to override the following parameters within your file settings:
 import sublime
 import sublime_plugin
 
+from support.view import view_is_widget, view_is_too_big
+
 
 DEFAULT_MAX_FILE_SIZE = 1048576
 DEFAULT_COLOR_NAME = 'comment'
@@ -38,18 +40,13 @@ class HighlightTrailingSpacesListener(sublime_plugin.EventListener):
         '''
         settings = view.settings()
 
-        if bool(settings.get('is_widget')):
+        if view_is_widget(view):
             return
 
-        max_size = settings.get('highlight_trailing_spaces_max_file_size',
-                                DEFAULT_MAX_FILE_SIZE)
-        # print max_size, type(max_size)
-        if max_size not in (None, False):
-            max_size = long(max_size)
-            cur_size = view.size()
-            if cur_size > max_size:
-                view.erase_regions('HighlightTrailingSpacesListener')
-                return
+        if view_is_too_big(view, 'highlight_trailing_spaces_max_file_size',
+                           DEFAULT_MAX_FILE_SIZE):
+            view.erase_regions('HighlightTrailingSpacesListener')
+            return
         
         color_name = settings.get('highlight_trailing_spaces_color_name',
                                   DEFAULT_COLOR_NAME)
