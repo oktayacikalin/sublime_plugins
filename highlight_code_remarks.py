@@ -2,6 +2,12 @@
 Event listener which scans content, finds special remark words like FIXME,
 TODO, WARNING, INFO or DONE and highlights them.
 
+In order to access the commands you have to add these to your key bindings:
+{ "keys": ["alt+down"], "command": "highlight_code_remarks_switch",
+  "args": {"direction": 1} },
+{ "keys": ["alt+up"], "command": "highlight_code_remarks_switch",
+  "args": {"direction": -1} },
+
 You might want to override the following parameters within your file settings:
 * highlight_code_remarks_max_file_size
   Restrict this to a sane size in order not to DDOS your editor.
