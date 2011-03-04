@@ -112,54 +112,90 @@ Add these to your theme (and optionally adapt the colors to your liking):
 @license: MIT (http://www.opensource.org/licenses/mit-license.php)
 
 @since: 2011-02-26
+
+@TODO Add forward and backward jumping to remark words in buffer.
+@TODO Add queue jumping to switch between them.
+@TODO When in a line where only one region is being highlighted and the cursor
+      does not touch it, try to get a region of the whole line, find the region
+      in it and trigger the switch.)
 '''
 
 import sublime
+import sublime_plugin
 
 from support.view import DeferedViewListener
 
 
 DEFAULT_MAX_FILE_SIZE = 1048576
+DEFAULT_DELAY = 500
 
-REMARK_COLORS = {
-    'TODO': 'remark.todo',
-    'DONE': 'remark.done',
-    'WAIT': 'remark.wait',
-    'NOTE': 'remark.note',
-    'FIXME': 'remark.fixme',
-    'WARNING': 'remark.warning',
-    'INFO': 'remark.info',
-    'EXCEPTION': 'remark.exception',
-    'ERROR': 'remark.error',
-}
+REMARK_QUEUES = (
+    ('Todo list',
+     r'(?:^[ \t]*?[*]+[ \t]*)?\<(%s)\>(?:[^\'\"\n\[\]\!\?]+?[:])?', (
+        ('TODO', 'remark.todo'),
+        ('WAIT', 'remark.wait'),
+        ('DONE', 'remark.done'),
+    )),
+
+    ('Code remarks',
+     r'(?:^[ \t]*?[*]+[ \t]*)?\<(%s)\>(?:[^\'\"\n\[\]\!\?]+?[:])?', (
+        ('NOTE', 'remark.note'),
+        ('INFO', 'remark.info'),
+        ('FIXME', 'remark.fixme'),
+        ('WARNING', 'remark.warning'),
+        ('EXCEPTION', 'remark.exception'),
+        ('ERROR', 'remark.error'),
+    )),
+
+    ('Due date',
+     r'(?:^[ \t]*?[*]+[ \t]*)?\<(%s)\>(?:\s*<[^\'\"\n\[\]\!\?]+?>|\: \[\d+-\d+-\d+ \w+( \d+:\d+)?\]|\: <\d+-\d+-\d+ \w+( \d+:\d+)?>)?', (
+        ('SCHEDULED', 'remark.info'),
+        ('OVERDUE', 'remark.warning'),
+        ('CLOSED', 'remark.note'),
+    )),
+)
+
+
+def get_cache():
+    cache = dict()
+    for title, pattern, mapping in REMARK_QUEUES:
+        keys = [key for key, val in mapping]
+        values = [val for key, val in mapping]
+        regex = pattern % '|'.join(keys)
+        regex = '(?:' + regex + ')'
+        cache[title] = dict(
+            pattern=pattern,
+            mapping=mapping,
+            keys=keys,
+            values=values,
+            regex=regex,
+        )
+    return cache
+
+if 'found_regions' not in globals():
+    found_regions = dict()
 
 
 class HighlightCodeRemarksListener(DeferedViewListener):
 
     def __init__(self):
         super(HighlightCodeRemarksListener, self).__init__()
-        color_keys, color_values = zip(*REMARK_COLORS.items())
-        # print color_keys
-        # print color_values
-        pattern = r'(?:^[ \t]*?[*]+[ \t]*)?\<(%s)\>(?:[^\'\"\n\[\]\!\?]+?[:])?'
-        regex = pattern % '|'.join(color_keys)
-        regex = '(?:' + regex + ')'
-        # print 'regex =', regex
-        self.regex = regex
-        self.color_keys = color_keys
-        self.color_values = color_values
+        self.cache = get_cache()
         self.max_size_setting = 'highlight_code_remarks_max_file_size'
         self.default_max_file_size = DEFAULT_MAX_FILE_SIZE
-        self.delay = 500
+        self.delay = DEFAULT_DELAY
 
     def view_is_too_big_callback(self, view):
-        for color_value in self.color_values:
-            tag = 'HighlightCodeRemarksListener.%s' % color_value
-            view.erase_regions(tag)
+        for title, queue in self.cache.iteritems():
+            for color_value in queue['values']:
+                tag = 'HighlightCodeRemarksListener.%s.%s' % (title,
+                                                              color_value)
+                view.erase_regions(tag)
 
-    def update(self, view):
+    def update_queue(self, view, title, queue):
+        buffer_id = view.buffer_id()
         remarks = []
-        regions = view.find_all(self.regex, sublime.OP_REGEX_MATCH,
+        regions = view.find_all(queue['regex'], sublime.OP_REGEX_MATCH,
                                 '$0', remarks)
         results = dict()
         for pos, region in enumerate(regions):
@@ -167,10 +203,12 @@ class HighlightCodeRemarksListener(DeferedViewListener):
             remark = remark.strip('\t :*')
             # print pos, region, remark
             color_value = False
-            for key, val in REMARK_COLORS.iteritems():
+            color_key = False
+            for key, val in queue['mapping']:
                 # print key, val, remark
                 if remark.startswith(key):
                     color_value = val
+                    color_key = key
                     break
             if not color_value:
                 continue
@@ -178,9 +216,10 @@ class HighlightCodeRemarksListener(DeferedViewListener):
             if color_value not in results:
                 results[color_value] = list()
             results[color_value].append(region)
+            found_regions[buffer_id].append((title, color_key, color_value, region))
         # print results
-        for color_value in self.color_values:
-            tag = 'HighlightCodeRemarksListener.%s' % color_value
+        for color_value in queue['values']:
+            tag = 'HighlightCodeRemarksListener.%s.%s' % (title, color_value)
             if color_value in results:
                 # print 'add', tag, results[color_value], color_value
                 view.add_regions(tag, results[color_value], color_value,
@@ -188,3 +227,55 @@ class HighlightCodeRemarksListener(DeferedViewListener):
             else:
                 # print 'remove', tag
                 view.erase_regions(tag)
+
+    def update(self, view):
+        buffer_id = view.buffer_id()
+        found_regions[buffer_id] = list()
+        for title, queue in self.cache.iteritems():
+            self.update_queue(view, title, queue)
+
+
+class HighlightCodeRemarksSwitchCommand(sublime_plugin.TextCommand):
+
+    def __init__(self, view):
+        super(HighlightCodeRemarksSwitchCommand, self).__init__(view)
+        self.cache = get_cache()
+
+    def find_region_for_sel(self, sel, regions):
+        for item in regions:
+            title, key, value, region = item
+            if region.contains(sel):
+                return item
+        return None
+
+    def run(self, edit, direction=1):
+        buffer_id = self.view.buffer_id()
+        sels = self.view.sel()
+        if len(sels) == 1:
+            sel = sels[0]
+            regions = found_regions[buffer_id]
+            sel_region = self.find_region_for_sel(sel, regions)
+            if sel_region is None:
+                return  # Nothing found.
+            # print sel_region
+            title, key, value, region = sel_region
+            keys = self.cache[title]['keys']
+            sel = self.view.find(key, region.begin(), sublime.LITERAL)
+            if not sel:
+                print title, key, value, region
+                sublime.error_message('Could not switch remark for: %s' % title)
+                return
+            sublime.status_message('Switching within remark queue: %s' % title)
+            pos = keys.index(key)
+            pos += int(direction)
+            if pos >= len(keys):
+                pos = 0
+            elif pos < 0:
+                pos = len(keys) - 1
+            self.view.replace(edit, sel, keys[pos])
+            # Remove obsolete regions.
+            tag = 'HighlightCodeRemarksListener.%s.%s' % (title, value)
+            self.view.erase_regions(tag)
+            for region in regions[:]:
+                if region[0] == title:
+                    regions.remove(region)
