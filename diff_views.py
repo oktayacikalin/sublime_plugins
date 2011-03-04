@@ -1,6 +1,10 @@
 '''
 Collects views, creates a unified diff and pastes it into a scratch view.
 
+You might want to override the following parameters within your file settings:
+* diff_views_syntax_file
+  Set this to your syntax file or None if you don't have one.
+
 In order to access the commands you have to add these to your key bindings:
 { "keys": ["ctrl+d"], "command": "diff_views_mark" },
 { "keys": ["ctrl+shift+d"], "command": "diff_views_execute" },
@@ -27,6 +31,8 @@ import difflib
 import sublime
 import sublime_plugin
 
+
+DEFAULT_DIFF_SYNTAX_FILE = 'Packages/User/Diff.tmLanguage'
 
 views = []
 
@@ -76,6 +82,8 @@ class DiffViewsMarkCommand(sublime_plugin.TextCommand):
 class DiffViewsExecuteCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
+        syntax_file = self.view.settings().get('diff_views_syntax_file',
+                                               DEFAULT_DIFF_SYNTAX_FILE)
         # print views
         if len(views) < 2:
             sublime.status_message('Need at least 2 views for diff. Got %d.'
@@ -99,6 +107,8 @@ class DiffViewsExecuteCommand(sublime_plugin.TextCommand):
         if len(buffer):
             view.insert(edit, view.size(), buffer)
         view.end_edit(edit)
-        # settings = view.settings()
+        settings = view.settings()
         # settings.set('line_numbers', False)
+        if syntax_file:
+            settings.set('syntax', syntax_file)
         # view.set_read_only(True)
