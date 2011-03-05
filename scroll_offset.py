@@ -22,6 +22,8 @@ Configurable file settings:
 import sublime
 import sublime_plugin
 
+from support.view import view_is_widget
+
 
 DEFAULT_OFFSET_TOP = 5
 DEFAULT_OFFSET_BOTTOM = 5
@@ -47,6 +49,9 @@ class ScrollOffsetListener(sublime_plugin.EventListener):
         if getattr(self, 'paused', False):
             return
         
+        if view_is_widget(view):
+            return
+        
         get = view.settings().get
         offset_top = get('scroll_offset_top', DEFAULT_OFFSET_TOP)
         offset_top_treshold = get('scroll_offset_top_treshold',
@@ -63,9 +68,17 @@ class ScrollOffsetListener(sublime_plugin.EventListener):
         view_begin = view.rowcol(visible_region.begin())[0]
         view_end = view.rowcol(visible_region.end())[0]
 
-        if view_end - view_begin <= offset_top + offset_bottom:
-            # print 'view is too small.'
-            return
+        view_size = view_end - view_begin
+        offset_sum = offset_top + offset_bottom
+        while view_size <= offset_sum:
+            # print view_size
+            # print offset_sum
+            offset_top /= 2
+            offset_bottom /= 2
+            offset_sum = offset_top + offset_bottom
+            if offset_sum < 1:
+                # print 'view is too small.'
+                return
 
         selected_region = view.sel()[0]
         selection_end = view.rowcol(selected_region.b)[0]
