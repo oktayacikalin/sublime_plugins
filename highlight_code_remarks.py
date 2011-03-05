@@ -21,7 +21,7 @@ Add these to your theme (and optionally adapt the colors to your liking):
             <key>settings</key>
             <dict>
                 <key>foreground</key>
-                <string>#FFFFAA</string>
+                <string>#FFAAAA</string>
             </dict>
         </dict>
         <dict>
@@ -37,9 +37,20 @@ Add these to your theme (and optionally adapt the colors to your liking):
         </dict>
         <dict>
             <key>name</key>
-            <string>Remark WAIT</string>
+            <string>Remark WORKING</string>
             <key>scope</key>
-            <string>remark.wait</string>
+            <string>remark.working</string>
+            <key>settings</key>
+            <dict>
+                <key>foreground</key>
+                <string>#FFFFAA</string>
+            </dict>
+        </dict>
+        <dict>
+            <key>name</key>
+            <string>Remark WAITING</string>
+            <key>scope</key>
+            <string>remark.waiting</string>
             <key>settings</key>
             <dict>
                 <key>foreground</key>
@@ -139,8 +150,10 @@ REMARK_QUEUES = (
     ('Todo list',
      r'(?:^[ \t]*?[*]+[ \t]*)?\<(%s)\>(?:[^\'\"\n\[\]\!\?]+?[:])?', (
         ('TODO', 'remark.todo'),
-        ('WAIT', 'remark.wait'),
+        ('WORKING', 'remark.working'),
+        ('WAITING', 'remark.waiting'),
         ('DONE', 'remark.done'),
+        ('CANCELED', 'remark.note'),
     )),
 
     ('Code remarks',
