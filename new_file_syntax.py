@@ -24,8 +24,6 @@ class NewFileSyntaxListener(sublime_plugin.EventListener):
     def on_new(self, view):
         # print 'on_new', self.last_syntax, view.buffer_id()
         self.new_buffers.append(view.buffer_id())
-        if self.last_syntax:
-            view.set_syntax_file(self.last_syntax)
 
     def on_activated(self, view):
         # print 'on_activated', self.last_syntax, view.buffer_id()
