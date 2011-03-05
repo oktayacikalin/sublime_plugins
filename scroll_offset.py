@@ -81,7 +81,7 @@ class ScrollOffsetListener(sublime_plugin.EventListener):
         if diff_top < offset_top:
             amount = offset_top - diff_top
             amount_is_enough = amount >= offset_top_treshold
-            if view_begin - amount > file_begin and amount_is_enough:
+            if view_begin - amount >= file_begin and amount_is_enough:
                 # print 'move up:', amount
                 if amount > 1 and selected_region.size() > 0:
                     self.paused = True
@@ -94,7 +94,7 @@ class ScrollOffsetListener(sublime_plugin.EventListener):
         if diff_bottom < offset_bottom:
             amount = offset_bottom - diff_bottom
             amount_is_enough = amount >= offset_bottom_treshold
-            if view_end + amount < file_end and amount_is_enough:
+            if view_end + amount <= file_end + 1 and amount_is_enough:
                 # print 'move down:', amount
                 if amount > 1 and selected_region.size() > 0:
                     self.paused = True
