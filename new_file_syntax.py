@@ -28,12 +28,11 @@ class NewFileSyntaxListener(sublime_plugin.EventListener):
     def on_activated(self, view):
         # print 'on_activated', self.last_syntax, view.buffer_id()
         if view.buffer_id() in self.new_buffers:
-            # self.last_syntax = view.settings().get('syntax')
-            view.set_syntax_file(self.last_syntax)
+            if self.last_syntax:
+                view.set_syntax_file(self.last_syntax)
             self.new_buffers.remove(view.buffer_id())
 
     def on_deactivated(self, view):
         # print 'on_deactivated', self.last_syntax, view.buffer_id()
         if view.buffer_id() not in self.new_buffers:
             self.last_syntax = view.settings().get('syntax')
-            # print self.last_syntax
