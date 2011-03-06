@@ -167,8 +167,9 @@ REMARK_QUEUES = (
     )),
 
     ('Due date',
-     r'(?:^[ \t]*?[*]+[ \t]*)?\<(%s)\>(?:\s*<[^\'\"\n\[\]\!\?]+?>|\: \[\d+-\d+-\d+ \w+( \d+:\d+)?\]|\: <\d+-\d+-\d+ \w+( \d+:\d+)?>)?', (
+     r'(?:^[ \t]*?[*]+[ \t]*)?\<(%s)\>(?:\s*<[^\'\"\n\[\]\!\?]+?>|\: \[\d+-\d+-\d+( \w+)?( \d+:\d+)?\]|\: <\d+-\d+-\d+( \w+)?( \d+:\d+)?>)?', (
         ('SCHEDULED', 'remark.info'),
+        ('DEADLINE', 'remark.info'),
         ('OVERDUE', 'remark.warning'),
         ('CLOSED', 'remark.note'),
     )),
