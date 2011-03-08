@@ -89,8 +89,8 @@ class DiffViewsExecuteCommand(sublime_plugin.TextCommand):
             sublime.status_message('Need at least 2 views for diff. Got %d.'
                                    % len(views))
             return
-        left = LineReader(views.pop(0))
-        right = LineReader(views.pop(0))
+        left = LineReader(views[0])
+        right = LineReader(views[1])
         diff = difflib.unified_diff(left, right,
                                     left.filename, right.filename, n=9)
         view = self.view.window().new_file()
