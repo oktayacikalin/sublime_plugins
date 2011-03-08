@@ -38,9 +38,12 @@ class DeferedViewListener(sublime_plugin.EventListener):
         self.default_max_file_size = None
         self.delay = 500
 
+    def is_enabled(self, view):
+        return True
+    
     def view_is_too_big_callback(self):
         pass
-
+    
     def update(self, view):
         pass
 
@@ -54,6 +57,9 @@ class DeferedViewListener(sublime_plugin.EventListener):
         if view_is_widget(view):
             return
         
+        if not self.is_enabled(view):
+            return
+
         if view_is_too_big(view, self.max_size_setting,
                            self.default_max_file_size):
             self.view_is_too_big_callback(view)
