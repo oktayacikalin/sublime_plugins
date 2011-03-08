@@ -146,9 +146,16 @@ from support.view import DeferedViewListener
 DEFAULT_MAX_FILE_SIZE = 1048576
 DEFAULT_DELAY = 500
 
+IGNORE_SYNTAX = []  # ['orgmode']
+
+# _leading_stars = r'(?:^[ \t]*?[*]+[ \t]*)?'
+# _trailing_colon = r'(?:[^\'\"\n\[\]\!\?]+?[:])?'
+_leading_stars = ''
+_trailing_colon = ''
+
 REMARK_QUEUES = (
     ('Todo list',
-     r'(?:^[ \t]*?[*]+[ \t]*)?\<(%s)\>(?:[^\'\"\n\[\]\!\?]+?[:])?', (
+     _leading_stars + r'\<(%s)\>' + _trailing_colon, (
         ('TODO', 'remark.todo'),
         ('WORKING', 'remark.working'),
         ('WAITING', 'remark.waiting'),
@@ -157,7 +164,7 @@ REMARK_QUEUES = (
     )),
 
     ('Code remarks',
-     r'(?:^[ \t]*?[*]+[ \t]*)?\<(%s)\>(?:[^\'\"\n\[\]\!\?]+?[:])?', (
+     _leading_stars + r'\<(%s)\>' + _trailing_colon, (
         ('NOTE', 'remark.note'),
         ('INFO', 'remark.info'),
         ('FIXME', 'remark.fixme'),
@@ -167,7 +174,7 @@ REMARK_QUEUES = (
     )),
 
     ('Due date',
-     r'(?:^[ \t]*?[*]+[ \t]*)?\<(%s)\>(?:\s*<[^\'\"\n\[\]\!\?]+?>|\: \[\d+-\d+-\d+( \w+)?( \d+:\d+)?\]|\: <\d+-\d+-\d+( \w+)?( \d+:\d+)?>)?', (
+     _leading_stars + r'\<(%s)\>(?:\s*<[^\'\"\n\[\]\!\?]+?>|\: \[\d+-\d+-\d+( \w+)?( \d+:\d+)?\]|\: <\d+-\d+-\d+( \w+)?( \d+:\d+)?>)?', (
         ('SCHEDULED', 'remark.info'),
         ('DEADLINE', 'remark.info'),
         ('OVERDUE', 'remark.warning'),
@@ -204,6 +211,13 @@ class HighlightCodeRemarksListener(DeferedViewListener):
         self.max_size_setting = 'highlight_code_remarks_max_file_size'
         self.default_max_file_size = DEFAULT_MAX_FILE_SIZE
         self.delay = DEFAULT_DELAY
+
+    def is_enabled(self, view):
+        view_syntax = view.settings().get('syntax')
+        for syntax in IGNORE_SYNTAX:
+            if syntax in view_syntax:
+                return False
+        return True
 
     def view_is_too_big_callback(self, view):
         for title, queue in self.cache.iteritems():
