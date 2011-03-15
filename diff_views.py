@@ -32,7 +32,7 @@ import sublime
 import sublime_plugin
 
 
-DEFAULT_DIFF_SYNTAX_FILE = 'Packages/User/Diff.tmLanguage'
+DEFAULT_DIFF_SYNTAX_FILE = 'Packages/Diff/Diff.tmLanguage'
 
 views = []
 
