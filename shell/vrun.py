@@ -55,7 +55,9 @@ else:
 # print filename
 
 if not os.path.exists(filename):
-    raise Exception('File not found: %s' % filename)
+    msg = 'File not found: %s' % filename
+    sys.stderr.write(msg)
+    sys.exit(2)
 
 # Ensure to have full filepath of filename for gathering the correct virtualenv.
 filename = os.path.abspath(filename)
