@@ -16,7 +16,8 @@ import sublime_plugin
 from support.view import view_is_widget
 
 
-FORMAT = '%(weekday)s %%d %%H:%%M'
+# FORMAT = '%(weekday)s %%d %%H:%%M'
+FORMAT = '%%H:%%M'
 WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 STATUS_KEY = 'clock'
 
