@@ -70,6 +70,8 @@ class Highlighter(object):
                 results = self.view.find_all('(def|class) %s(.*):' % symbol)
                 results += self.view.find_all('%s\s*=.*' % symbol)
                 results += self.view.find_all('import .*%s' % symbol)
+                results += self.view.find_all('from .* import .*%s' % symbol)
+                results += self.view.find_all('from .* import \([^\)]*%s[^\)]*\)' % symbol)
                 if results:
                     regions += results
             if regions:
